@@ -83,8 +83,8 @@ int install_zip(const char* packagefilepath)
 
 char* INSTALL_MENU_ITEMS[] = {  "choose zip from external sdcard",
                                 "choose zip from internal sdcard",
-                                "apply /sdcard/update.zip (internal)",
-                                "apply /emmc/update.zip (external)",
+                                "apply /sdcard/update.zip (external)",
+                                "apply /emmc/update.zip (internal)",
                                 "toggle signature verification",
                                 "toggle script asserts",
                                 NULL };
@@ -129,10 +129,10 @@ void show_install_update_menu()
                 break;
             }
             case ITEM_CHOOSE_ZIP:
-                show_choose_zip_menu("/emmc/");
+                show_choose_zip_menu("/sdcard/");
                 break;
             case ITEM_CHOOSE_ZIP_INT:
-                show_choose_zip_menu("/sdcard/");
+                show_choose_zip_menu("/emmc/");
                 break;
             default:
                 return;
@@ -367,22 +367,33 @@ void show_nandroid_restore_menu(const char* path)
 }
 
 #ifndef BOARD_UMS_LUNFILE
-#define BOARD_UMS_LUNFILE	"/sys/devices/platform/usb_mass_storage/lun0/file"
+#define BOARD_UMS_LUNFILE	"/sys/class/android_usb/android0/f_mass_storage/lun0/file"
 #endif
 
 void show_mount_usb_storage_menu(char path[10])
 {
     int fd;
+    char lunfile_path[255];
     
 	Volume *vol = volume_for_path(path);
-    if ((fd = open(BOARD_UMS_LUNFILE, O_WRONLY)) < 0) {
-        LOGE("Unable to open ums lunfile (%s)", strerror(errno));
+	
+	//LOGE("PATH = %s", path);
+	
+	if(strcmp(path,"/sdcard")==0)
+		strcpy(lunfile_path,"/sys/devices/platform/s3c-usbgadget/gadget/lun1/file");
+	if(strcmp(path,"/emmc")==0)
+		strcpy(lunfile_path,"/sys/devices/platform/s3c-usbgadget/gadget/lun0/file");
+	
+	//LOGE("LUN PATH = %s", lunfile_path);
+	
+    if ((fd = open(lunfile_path, O_WRONLY)) < 0) {
+        LOGE("\nUnable to open ums lunfile (%s)", strerror(errno));
         return -1;
     }
 
     if ((write(fd, vol->device, strlen(vol->device)) < 0) &&
         (!vol->device2 || (write(fd, vol->device, strlen(vol->device2)) < 0))) {
-        LOGE("Unable to write to ums lunfile (%s)", strerror(errno));
+        LOGE("\nUnable to write to ums lunfile (%s)", strerror(errno));
         close(fd);
         return -1;
     }
@@ -402,7 +413,7 @@ void show_mount_usb_storage_menu(char path[10])
             break;
     }
 
-    if ((fd = open(BOARD_UMS_LUNFILE, O_WRONLY)) < 0) {
+    if ((fd = open(lunfile_path, O_WRONLY)) < 0) {
         LOGE("Unable to open ums lunfile (%s)", strerror(errno));
         return -1;
     }
@@ -718,11 +729,11 @@ void show_partition_menu()
             break;
         if (chosen_item == (mountable_volumes+formatable_volumes))
         {
-            show_mount_usb_storage_menu("/sdcard");
+            show_mount_usb_storage_menu("/emmc");
         }
         if (chosen_item == ((mountable_volumes+formatable_volumes)+1))
         {
-            show_mount_usb_storage_menu("/emmc");
+            show_mount_usb_storage_menu("/sdcard");
         }
         else if (chosen_item < mountable_volumes)
         {
@@ -851,20 +862,20 @@ void show_nandroid_menu()
                 {
                     struct timeval tp;
                     gettimeofday(&tp, NULL);
-                    sprintf(backup_path, "/sdcard/clockworkmod/backup/%d", tp.tv_sec);
+                    sprintf(backup_path, "/emmc/clockworkmod/backup/%d", tp.tv_sec);
                 }
                 else
                 {
-                    strftime(backup_path, sizeof(backup_path), "/sdcard/clockworkmod/backup/%F.%H.%M.%S", tmp);
+                    strftime(backup_path, sizeof(backup_path), "/emmc/clockworkmod/backup/%F.%H.%M.%S", tmp);
                 }
                 nandroid_backup(backup_path);
             }
             break;
         case 1:
-            show_nandroid_restore_menu("/sdcard");
+            show_nandroid_restore_menu("/emmc");
             break;
         case 2:
-            show_nandroid_advanced_restore_menu("/sdcard");
+            show_nandroid_advanced_restore_menu("/emmc");
             break;
         case 3:
             {
@@ -875,20 +886,20 @@ void show_nandroid_menu()
                 {
                     struct timeval tp;
                     gettimeofday(&tp, NULL);
-                    sprintf(backup_path, "/emmc/clockworkmod/backup/%d", tp.tv_sec);
+                    sprintf(backup_path, "/sdcard/clockworkmod/backup/%d", tp.tv_sec);
                 }
                 else
                 {
-                    strftime(backup_path, sizeof(backup_path), "/emmc/clockworkmod/backup/%F.%H.%M.%S", tmp);
+                    strftime(backup_path, sizeof(backup_path), "/sdcard/clockworkmod/backup/%F.%H.%M.%S", tmp);
                 }
                 nandroid_backup(backup_path);
             }
             break;
         case 4:
-            show_nandroid_restore_menu("/emmc");
+            show_nandroid_restore_menu("/sdcard");
             break;
         case 5:
-            show_nandroid_advanced_restore_menu("/emmc");
+            show_nandroid_advanced_restore_menu("/sdcard");
             break;
     }
 }
@@ -1126,11 +1137,13 @@ void show_governors_menu()
 					{
 						__system("touch /data/neak/conservative");
 						ui_print("\nConservative GOV Enabled!");
-						goto reset;
+						//goto reset;
+						break;
 					}
 					case 1:
 					{
-						goto reset;
+						//goto reset;
+						break;
 					}
 				}
 			}
@@ -1150,11 +1163,13 @@ void show_governors_menu()
 						remove("/data/neak/conservative");
 						remove("/data/neak/lionheart");
 						ui_print("\nConservative GOV Disabled!");
-						goto reset;
+						//goto reset;
+						break;
 					}
 					case 1:
 					{
-						goto reset;
+						//goto reset;
+						break;
 					}
 				}			
 			}
@@ -1177,11 +1192,13 @@ void show_governors_menu()
 					{
 						__system("touch /data/neak/lazy");
 						ui_print("\nLazy GOV Enabled!");
-						goto reset;
+						//goto reset;
+						break;
 					}
 					case 1:
 					{
-						goto reset;
+						//goto reset;
+						break;
 					}
 				}
 			}
@@ -1200,11 +1217,13 @@ void show_governors_menu()
 					{
 						remove("/data/neak/lazy");
 						ui_print("\nLazy GOV Disabled!");
-						goto reset;
+						//goto reset;
+						break;
 					}
 					case 1:
 					{
-						goto reset;
+						//goto reset;
+						break;
 					}	
 				}			
 			}
@@ -1216,7 +1235,8 @@ void show_governors_menu()
 			{
 				ui_print("\n\nConservative GOV NOT ENABLED!\n");
 				ui_print("Please enable it to use LIONHEART!\n");
-				goto reset;
+				//goto reset;
+				break;
 			}
 			else
 			{
@@ -1235,11 +1255,13 @@ void show_governors_menu()
 						{
 							__system("touch /data/neak/lionheart");
 							ui_print("\nLionheart Tweaks Enabled!");
-							goto reset;
+							//goto reset;
+							break;
 						}
 						case 1:
 						{
-							goto reset;
+							//goto reset;
+							break;
 						}
 					}
 				}
@@ -1258,16 +1280,19 @@ void show_governors_menu()
 						{
 							remove("/data/neak/lionheart");
 							ui_print("\nLionheart Tweaks Disabled!");
-							goto reset;
+							//goto reset;
+							break;
 						}
 						case 1:
 						{
-							goto reset;
+							//goto reset;
+							break;
 						}
 					}			
 				}
 			}
-		}			 
+			break;
+		  }			 
 		}
 	}
 }
@@ -1318,11 +1343,13 @@ void show_misc_menu()
 						{
 							__system("touch /data/neak/schedmc");
 							ui_print("\nSCHED_MC power savings Enabled!");
-							goto reset;
+							//goto reset;
+							break;
 						}
 						case 1:
 						{
-							goto reset;
+							//goto reset;
+							break;
 						}
 					}
 				}
@@ -1341,14 +1368,17 @@ void show_misc_menu()
 						{
 							remove("/data/neak/schedmc");
 							ui_print("\nSCHED_MC power savings Disabled!");
-							goto reset;
+							//goto reset;
+							break;
 						}
 						case 1:
 						{
-							goto reset;
+							//goto reset;
+							break;
 						}
 					}
 				}
+				break;
 			}
 			case 1:
 			{
@@ -1367,11 +1397,13 @@ void show_misc_menu()
 						{
 							__system("touch /data/neak/aftridle");
 							ui_print("\nAFTR Idle Mode Enabled!");
-							goto reset;
+							//goto reset;
+							break;
 						}
 						case 1:
 						{
-							goto reset;
+							//goto reset;
+							break;
 						}
 					}
 				}
@@ -1390,14 +1422,17 @@ void show_misc_menu()
 						{
 							remove("/data/neak/aftridle");
 							ui_print("\nAFTR Idle Mode Disabled!");
-							goto reset;
+							//goto reset;
+							break;
 						}
 						case 1:
 						{
-							goto reset;
+							//goto reset;
+							break;
 						}
 					}
 				}
+				break;
 			}
 			case 2:
 			{
@@ -1416,11 +1451,13 @@ void show_misc_menu()
 						{
 							__system("touch /data/neak/ext4boost");
 							ui_print("\nEXT4 Tweaks Enabled!");
-							goto reset;
+							//goto reset;
+							break;
 						}
 						case 1:
 						{
-							goto reset;
+							//goto reset;
+							break;
 						}
 					}
 				}
@@ -1439,14 +1476,17 @@ void show_misc_menu()
 						{
 							remove("/data/neak/ext4boost");
 							ui_print("\nEXT4 Tweaks Disabled!");
-							goto reset;
+							//goto reset;
+							break;
 						}
 						case 1:
 						{
-							goto reset;
+							//goto reset;
+							break;
 						}
 					}
 				}
+				break;
 			}
 		}
 	}
@@ -1458,7 +1498,7 @@ void show_neak_menu()
 	
     ensure_path_mounted("/system");
     ensure_path_mounted("/data");
-    ensure_path_mounted("/sdcard");
+    ensure_path_mounted("/emmc");
 
     static char* headers[] = { "N.E.A.K. Options",
                                 "",
@@ -1512,18 +1552,21 @@ for (;;)
 	case 3:
 	{
 		show_governors_menu();
-		goto reset;
+		//goto reset;
+		break;
 	}
 		
 	case 4:
 	{
 		show_misc_menu();
-		goto reset;
+		//goto reset;
+		break;
 	}
 	case 5:
 	{
 		show_neak_config_menu();
-		goto reset;
+		//goto reset;
+		break;
 	}
     }
   }
