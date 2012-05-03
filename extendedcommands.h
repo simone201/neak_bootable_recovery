@@ -52,6 +52,12 @@ show_neak_config_menu();
 void
 show_neak_menu();
 
+void
+show_romtools_menu();
+
+void
+show_bus_asvtable_mod();
+
 int format_unknown_device(const char *device, const char* path, const char *fs_type);
 
 void

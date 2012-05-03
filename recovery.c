@@ -447,6 +447,7 @@ get_menu_selection(char** headers, char** items, int menu_only,
     int wrap_count = 0;
 
     while (chosen_item < 0 && chosen_item != GO_BACK) {
+		usleep(25000);
         int key = ui_wait_key();
         int visible = ui_text_visible();
 
@@ -741,9 +742,15 @@ prompt_and_wait() {
             case ITEM_ADVANCED:
                 show_advanced_menu();
                 break;
+                
             case ITEM_NEAK:
                 show_neak_menu();
                 break;
+                
+            case ITEM_ROMTOOLS:
+				show_romtools_menu();
+				break;
+				
             case ITEM_POWEROFF:
                 poweroff = 1;
                 return;
@@ -826,6 +833,11 @@ main(int argc, char **argv) {
 		__system("touch /sdcard/clockworkmod/.salted_hash");
 		__system("touch /sdcard/clockworkmod/.one_confirm");
 	}
+
+	// Setting Noop + Ondemand into recovery mode
+	__system("echo noop > /sys/block/mmcblk0/queue/scheduler"); 
+	__system("echo noop > /sys/block/mmcblk1/queue/scheduler"); 
+	__system("echo ondemand > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"); 
 
     int previous_runs = 0;
     const char *send_intent = NULL;

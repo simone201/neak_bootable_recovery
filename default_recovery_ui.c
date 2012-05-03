@@ -29,6 +29,7 @@ char* MENU_ITEMS[] = { "Reboot system now",
                        "Backup and Restore",
                        "Mounts and Storage",
 					   "N.E.A.K. Options",
+					   "ROM Tools",
                        "Advanced",
                        "Power OFF",
                        NULL };

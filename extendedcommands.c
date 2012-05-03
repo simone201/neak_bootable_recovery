@@ -762,6 +762,12 @@ void show_partition_menu()
             if (!confirm_selection(confirm_string, confirm))
                 continue;
             ui_print("Formatting %s...\n", v->mount_point);
+            
+            if(strcmp(v->mount_point,"/sdcard")==0)
+				v->mount_point = "/emmc";
+			else if (strcmp(v->mount_point,"/emmc")==0)
+				v->mount_point = "/sdcard";
+				
             if (0 != format_volume(v->mount_point))
                 ui_print("Error formatting %s!\n", v->mount_point);
             else
@@ -1507,7 +1513,7 @@ void show_neak_menu()
 
 	static char* list[] = { "Remove Voltage Control Settings",
                             "Create EFS Backup",
-                            "Clear init.d folder",
+                            "Bus ASV Voltages...",
                             "Governors Options...",
                             "Misc Options...",
                             "Configurator Pro Options...",
@@ -1528,53 +1534,158 @@ for (;;)
         
 	switch (chosen_item)
     {
-	case 0:
-	{
-		remove("/system/etc/init.d/S_volt_scheduler");
-		remove("/system/etc/init.d/S91voltctrl");
-		ui_print("Voltage Control settings removed\n");
-		break;
-	}
-	case 1:
-	{
-		ensure_path_mounted("/efs");
-		__system("sh /sbin/near/efs-backup.sh");
-		ui_print("EFS Backup completed!\n");
-		break;
-	}
-	case 2:
-	{
-		__system("rm -rf /system/etc/init.d");
-		__system("mkdir /system/etc/init.d");
-		ui_print("Init.d Folder cleared!\n");
-	}	
-	
-	case 3:
-	{
-		show_governors_menu();
-		//goto reset;
-		break;
-	}
+		case 0:
+		{
+			remove("/system/etc/init.d/S_volt_scheduler");
+			remove("/system/etc/init.d/S91voltctrl");
+			ui_print("Voltage Control settings removed\n");
+			break;
+		}
 		
-	case 4:
-	{
-		show_misc_menu();
-		//goto reset;
-		break;
+		case 1:
+		{
+			ensure_path_mounted("/efs");
+			__system("sh /sbin/near/efs-backup.sh");
+			ui_print("EFS Backup completed!\n");
+			break;
+		}
+		
+		case 2:
+		{
+			show_bus_asvtable_mod();
+			break;
+		}
+		
+		case 3:
+		{
+			show_governors_menu();
+			break;
+		}
+		
+		case 4:
+		{
+			show_misc_menu();
+			break;
+		}
+	
+		case 5:
+		{
+			show_neak_config_menu();
+			break;
+		}
 	}
-	case 5:
-	{
-		show_neak_config_menu();
-		//goto reset;
-		break;
-	}
-    }
   }
+}
+
+void show_romtools_menu()
+{
+	ensure_path_mounted("/system");
+	
+	static char* headers[] = { "ROM Tools",
+                                "",
+                                NULL
+							 };
+
+	static char* list[] = { "Clear init.d folder",
+                            "Install/Reinstall ROOT",
+                             NULL
+						  };
+						  
+	for (;;)
+	{
+		int chosen_item = get_menu_selection(headers, list, 0, 0);
+		if (chosen_item == GO_BACK)
+			break;
+        
+		switch (chosen_item)
+		{
+			case 0:
+				__system("rm -rf /system/etc/init.d");
+				__system("mkdir /system/etc/init.d");
+				ui_print("Init.d Folder cleared!\n");
+				break;
+			case 1:
+				__system("sh /sbin/near/install-su.sh");
+				ui_print("Root/Superuser installed!\n");
+				break;
+		}
+	}
+}
+
+void show_bus_asvtable_mod()
+{
+	static char* headers[] = { "Change BUS ASV Voltage Table",
+                               "Higher = More UV",
+                                NULL
+							 };
+
+	static char* list[] = { "Level 0",
+                            "Level 1",
+                            "Level 2",
+                            "Level 3",
+                            "Level 4 (default)",
+                            "Level 5",
+                            "Level 6",
+                             NULL
+						  };
+			  
+	for (;;)
+	{
+		int chosen_item = get_menu_selection(headers, list, 0, 0);
+		if (chosen_item == GO_BACK)
+			break;
+		
+		switch (chosen_item)
+		{
+			case 0:
+				remove("/data/neak/bus_asv_table");
+				__system("touch /data/neak/bus_asv_table");
+				__system("echo 0 > /data/neak/bus_asv_table");
+				ui_print("Bus ASV table set to Lvl 0!\n");
+				break;
+			case 1:
+				remove("/data/neak/bus_asv_table");
+				__system("touch /data/neak/bus_asv_table");
+				__system("echo 1 > /data/neak/bus_asv_table");
+				ui_print("Bus ASV table set to Lvl 1!\n");
+				break;
+			case 2:
+				remove("/data/neak/bus_asv_table");
+				__system("touch /data/neak/bus_asv_table");
+				__system("echo 2 > /data/neak/bus_asv_table");
+				ui_print("Bus ASV table set to Lvl 2!\n");
+				break;
+			case 3:
+				remove("/data/neak/bus_asv_table");
+				__system("touch /data/neak/bus_asv_table");
+				__system("echo 3 > /data/neak/bus_asv_table");
+				ui_print("Bus ASV table set to Lvl 3!\n");
+				break;
+			case 4:
+				remove("/data/neak/bus_asv_table");
+				__system("touch /data/neak/bus_asv_table");
+				__system("echo 4 > /data/neak/bus_asv_table");
+				ui_print("Bus ASV table set to Lvl 4!\n");
+				break;
+			case 5:
+				remove("/data/neak/bus_asv_table");
+				__system("touch /data/neak/bus_asv_table");
+				__system("echo 5 > /data/neak/bus_asv_table");
+				ui_print("Bus ASV table set to Lvl 5!\n");
+				break;
+			case 6:
+				remove("/data/neak/bus_asv_table");
+				__system("touch /data/neak/bus_asv_table");
+				__system("echo 6 > /data/neak/bus_asv_table");
+				ui_print("Bus ASV table set to Lvl 6!\n");
+				break;
+		}
+	}			
 }
 
 void show_neak_config_menu()
 {
-	static char* headers[] = { "N.E.A.K. Configurator PRO Options",
+	static char* headers[] = { "N.E.A.K. Configurator PRO",
                                 "",
                                 NULL
 							 };
