@@ -1622,10 +1622,11 @@ void show_bus_asvtable_mod()
 	static char* list[] = { "Level 0",
                             "Level 1",
                             "Level 2",
-                            "Level 3",
-                            "Level 4 (default)",
+                            "Level 3 (default)",
+                            "Level 4",
                             "Level 5",
                             "Level 6",
+                            "Level 7",
                              NULL
 						  };
 			  
@@ -1678,6 +1679,12 @@ void show_bus_asvtable_mod()
 				__system("touch /data/neak/bus_asv_table");
 				__system("echo 6 > /data/neak/bus_asv_table");
 				ui_print("Bus ASV table set to Lvl 6!\n");
+				break;
+			case 7:
+				remove("/data/neak/bus_asv_table");
+				__system("touch /data/neak/bus_asv_table");
+				__system("echo 7 > /data/neak/bus_asv_table");
+				ui_print("Bus ASV table set to Lvl 7!\n");
 				break;
 		}
 	}			
